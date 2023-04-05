@@ -20,14 +20,14 @@ function ProductSpace(param_dim::Int64,phase_dim::Int64)
 end
 
 struct System
-    deterministic_forcing::Function
-    σ::Union{Vector{Float64},Float64,Int64} #Noise amplitudes for additive noise in phase space
+    deterministic_forcing::Function #Function of the form f(x,p) whith x a vector in phase space and p a vector in parameter space
     prod_space::ProductSpace
+    dt::Number
 end
 
 
-function double_well(x::Vector{Float64},p::Vector{Float64})
+function double_well(x::Number, p::Vector{Float64})
     x^3*p[1] + x*p[2] + p[3]
 end
 
-DoubleWell = System(double_well,ProductSpace(3,1))
+DoubleWell = System(double_well, ProductSpace(3,1),0.01)

@@ -1,5 +1,6 @@
 include("System.jl")
 include("IntegrateTraj.jl")
+include("Observables.jl")
 
 using GLMakie
 
@@ -24,14 +25,14 @@ function PlotObjects(sys::System; T_max::Number = 100, x_lims::Tuple = (-5,5), y
     ax_param = Axis(fig[1:2, 2], title = "Parameter values", xlabel = "t")
     xlims!(ax_param,(0,T_max))
 
-    ax_obs = Axis(fig[3, 2], title = "Observable", xlabel = "t")
+    ax_obs = Axis(fig[3, 2], xlabel = "t")
     xlims!(ax_obs,(0,T_max))
 
     return PlotObjects(T_max,x_lims,y_lims,fig,[ax_phase,ax_param,ax_obs],sys)
 end
 
 
-function runSimulation(objs::PlotObjects,x₀::Number,p₀::Vector{Float64},updater::Updater;T_trans::Number=10, update_rate::Int=10)
+function runSimulation(objs::PlotObjects,x₀::Number,p₀::Vector{Float64},updater::Updater,obs::Obs;T_trans::Number=10, update_rate::Int=10)
     display(objs.fig)
     x_range = collect(range(objs.x_lims[1], objs.x_lims[2], 200))
     x = x₀
@@ -41,7 +42,11 @@ function runSimulation(objs::PlotObjects,x₀::Number,p₀::Vector{Float64},upda
     for i in 1:length(p₀)
         lines!(objs.axis[2],p_traj[i])
     end
-    force = lines!(objs.axis[1], x_range, [objs.sys.deterministic_forcing(i,p) for i in x_range], color = "grey")
+    objs.axis[3].title = obs.name
+    ylims!(objs.axis[3],(2*obs(x,p)-1,1))
+    obs_traj = Observable(Point2f[Point2f(0,obs(x,p))])
+    lines!(objs.axis[3],obs_traj)
+    force = lines!(objs.axis[1], x_range, [objs.sys.forcing(i,p) for i in x_range], color = "grey")
     x_pos = scatter!(objs.axis[1],x,0, color = "black")
     for t in 0:objs.sys.dt:objs.T_max
         n = t/objs.sys.dt
@@ -51,9 +56,11 @@ function runSimulation(objs::PlotObjects,x₀::Number,p₀::Vector{Float64},upda
                 push!(p_traj[i][],Point2f(t,p[i]))
                 p_traj[i][] = p_traj[i][]
             end
+            push!(obs_traj[],Point2f(t,obs(x,p)))
+            obs_traj[] = obs_traj[]
             delete!(objs.axis[1], force)
             delete!(objs.axis[1], x_pos)
-            force = lines!(objs.axis[1], x_range, [objs.sys.deterministic_forcing(i,p) for i in x_range], color = "grey")
+            force = lines!(objs.axis[1], x_range, [objs.sys.forcing(i,p) for i in x_range], color = "grey")
             x_pos = scatter!(objs.axis[1],x,0, color = "black")
             sleep(0.001)
         end

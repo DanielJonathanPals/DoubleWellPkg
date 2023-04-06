@@ -20,7 +20,7 @@ function ProductSpace(param_dim::Int64,phase_dim::Int64)
 end
 
 struct System
-    deterministic_forcing::Function #Function of the form f(x,p) whith x a vector in phase space and p a vector in parameter space
+    forcing::Function #Function of the form f(x,p) whith x a vector in phase space and p a vector in parameter space
     prod_space::ProductSpace
     dt::Number
 end

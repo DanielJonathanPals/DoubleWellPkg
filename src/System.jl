@@ -21,13 +21,28 @@ end
 
 struct System
     forcing::Function #Function of the form f(x,p) whith x a vector in phase space and p a vector in parameter space
-    noise::Union{Number,Vector{Float64}}
     prod_space::ProductSpace
+    noise::Union{Number,Vector{Float64}}
     dt::Number
+    function System(f,p,n,dt)
+        param = ones(p.param.dim)
+        try
+            s = f(1.,param)
+        catch 
+            error("The input of the forcing function is not compatible with the structure of the product space")
+        end
+        if !(typeof(f(1.,param)) <: Number)
+            error("The output of the forcing function is not compatible with the structure of the product space")
+        end
+        if !(typeof(n) <: Number)
+            error("The noise is incompatible with the phase space dimension")
+        end
+        new(f,p,n,dt)
+    end
 end
 
 function System(forcing::Function,prod_space::ProductSpace;dt::Number=0.01,σ=0)
-    System(forcing,σ,prod_space,dt)
+    System(forcing,prod_space,σ,dt)
 end
 
 

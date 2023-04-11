@@ -5,6 +5,16 @@ abstract type Updater end
 struct RandomParamUpdate <: Updater
     sys::System
     σ_params::Union{Vector{Float64},Number,Int64}
+    function RandomParamUpdate(sys,σ)
+        if typeof(σ) <: Vector
+            try
+                sys.forcing(1.,σ)
+            catch
+                error("The field σ_params does not have the correct dimensions")
+            end
+        end
+        new(sys,σ)
+    end
 end
 
 function (param_up::RandomParamUpdate)(x::Number,p::Vector{Float64})
